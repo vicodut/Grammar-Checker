@@ -9,7 +9,7 @@ import {
   CardTitle,
 } from "@gc/ui";
 import { Check, CircleCheck, Copy, Eye, EyeOff, RefreshCw, TriangleAlert } from "lucide-react";
-import { useTokenFlow } from "./extension-token.flow";
+import { useTokenFlow } from "./extension-token.hook";
 
 type Props = {
   token: string;
