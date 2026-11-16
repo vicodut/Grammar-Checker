@@ -178,4 +178,28 @@ describe("timedModelCall", () => {
     });
     expect(calls).toHaveLength(1);
   });
+
+  test("a cancelled call records no attempt, even when its first reply does not parse", async () => {
+    const controller = new AbortController();
+    const { provider, now } = scripted([{ takes: 5, reply: ok("nope") }]);
+    const cancelling: Provider = {
+      ...provider,
+      complete: async (messages, options) => {
+        const reply = await provider.complete(messages, options);
+        controller.abort();
+        return reply;
+      },
+    };
+    const timed = await timedModelCall({
+      feature: "check",
+      provider: cancelling,
+      messages,
+      parse,
+      retryMessage,
+      logger: new Logger(() => {}),
+      signal: controller.signal,
+      now,
+    });
+    expect(timed.attempts).toEqual([]);
+  });
 });
