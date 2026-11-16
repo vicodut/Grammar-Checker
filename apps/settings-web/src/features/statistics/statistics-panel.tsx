@@ -94,12 +94,12 @@ const Body = ({ view }: { view: StatisticsView }) =>
 
 /** The Reset button's confirmation: nothing is cleared until "Clear all" is pressed. */
 const ConfirmReset = ({
-  onYes,
-  onNo,
+  onClearAll,
+  onCancel,
   busy,
 }: {
-  onYes: () => void;
-  onNo: () => void;
+  onClearAll: () => void;
+  onCancel: () => void;
   busy: boolean;
 }) => (
   <Alert variant="warning" role="alert" className="basis-full">
@@ -109,10 +109,10 @@ const ConfirmReset = ({
         Clear every statistic, including those of removed profiles? This cannot be undone.
       </p>
       <div className="flex flex-wrap gap-2">
-        <Button variant="destructive" size="sm" disabled={busy} onClick={onYes}>
+        <Button variant="destructive" size="sm" disabled={busy} onClick={onClearAll}>
           Clear all statistics
         </Button>
-        <Button variant="outline" size="sm" disabled={busy} onClick={onNo}>
+        <Button variant="outline" size="sm" disabled={busy} onClick={onCancel}>
           Cancel
         </Button>
       </div>
@@ -135,8 +135,8 @@ const ResetControl = ({
   flow.phase !== "idle" ? (
     <ConfirmReset
       busy={flow.phase === "clearing"}
-      onYes={onConfirm}
-      onNo={() => send({ type: "cancel" })}
+      onClearAll={onConfirm}
+      onCancel={() => send({ type: "cancel" })}
     />
   ) : (
     <Button variant="outline" size="sm" disabled={loading} onClick={() => send({ type: "reset" })}>
