@@ -1,3 +1,12 @@
+import {
+  CLOSERS,
+  isPunct,
+  matchCloseBrace,
+  matchCloseParen,
+  matchOpenParen,
+  OPENERS,
+} from "./size-check.brackets";
+import { isSuiteCallback } from "./size-check.suites";
 import type { Token } from "./size-check.tokenize";
 
 export interface FunctionSpan {
@@ -41,44 +50,8 @@ const NOT_NAMES = new Set([
   "extends",
 ]);
 
-const OPENERS = new Set(["(", "[", "{"]);
-const CLOSERS = new Set([")", "]", "}"]);
-
-const isPunct = (token: Token | undefined, value: string): boolean =>
-  token?.kind === "punct" && token.value === value;
-
 const isName = (token: Token | undefined): boolean =>
   token?.kind === "ident" && !NOT_NAMES.has(token.value);
-
-// Index of the "(" that matches the ")" at `close`, walking backwards.
-const matchOpenParen = (tokens: Token[], close: number): number | undefined => {
-  let depth = 0;
-  for (let j = close; j >= 0; j--) {
-    if (isPunct(tokens[j], ")")) depth++;
-    else if (isPunct(tokens[j], "(") && --depth === 0) return j;
-  }
-  return undefined;
-};
-
-// Index of the ")" that matches the "(" at `open`.
-const matchCloseParen = (tokens: Token[], open: number): number | undefined => {
-  let depth = 0;
-  for (let j = open; j < tokens.length; j++) {
-    if (isPunct(tokens[j], "(")) depth++;
-    else if (isPunct(tokens[j], ")") && --depth === 0) return j;
-  }
-  return undefined;
-};
-
-// Index of the "}" that matches the "{" at `open`, or the last token if unclosed.
-const matchCloseBrace = (tokens: Token[], open: number): number => {
-  let depth = 0;
-  for (let j = open; j < tokens.length; j++) {
-    if (isPunct(tokens[j], "{")) depth++;
-    else if (isPunct(tokens[j], "}") && --depth === 0) return j;
-  }
-  return tokens.length - 1;
-};
 
 const measureBlock = (tokens: Token[], open: number, name: string): FunctionSpan => {
   const first = tokens[open] as Token;
@@ -176,35 +149,6 @@ const callableSpan = (tokens: Token[], open: number): FunctionSpan | undefined =
   if (isPunct(after, "{")) body = close + 1;
   else if (isPunct(after, ":")) body = bodyAfterReturnType(tokens, close + 2);
   return body === undefined ? undefined : measureBlock(tokens, body, name);
-};
-
-// True when the function starting at `index` is the callback of a `describe` suite. A suite is
-// a grouping block; each test inside it is measured on its own.
-const isSuiteCallback = (tokens: Token[], index: number): boolean => {
-  let depth = 0;
-  for (let j = index - 1; j >= 0; j--) {
-    const token = tokens[j];
-    if (token?.kind !== "punct") continue;
-    if (CLOSERS.has(token.value)) depth++;
-    else if (OPENERS.has(token.value)) {
-      if (depth > 0) depth--;
-      else if (token.value !== "(") return false;
-      else return isDescribeCallee(tokens, j);
-    }
-  }
-  return false;
-};
-
-// `describe(`, `describe.skip(` or `describe.only(`.
-const isDescribeCallee = (tokens: Token[], open: number): boolean => {
-  const callee = tokens[open - 1];
-  if (callee?.kind === "ident" && callee.value === "describe") return true;
-  return (
-    callee?.kind === "ident" &&
-    (callee.value === "skip" || callee.value === "only") &&
-    isPunct(tokens[open - 2], ".") &&
-    tokens[open - 3]?.value === "describe"
-  );
 };
 
 // Every function-like body in the token stream, nested ones included.

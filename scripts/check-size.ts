@@ -1,11 +1,11 @@
-// Fails when a .ts/.tsx file under apps/ or packages/ is over 200 lines, or a function body is
+// Fails when a .ts/.tsx file under apps/, packages/ or scripts/ is over 200 lines, or a function body is
 // over 40 lines. Generated files (*.generated.*) are exempt. Run with `bun run size`.
 import { readdir, readFile } from "node:fs/promises";
 import { join, relative } from "node:path";
 import { checkSource, formatViolation, type SizeViolation } from "./size-check.rules";
 
 const root = join(import.meta.dir, "..");
-const SOURCE_ROOTS = ["apps", "packages"];
+const SOURCE_ROOTS = ["apps", "packages", "scripts"];
 // Build output (gitignored): the declaration files `tsc -b` writes under build/.
 const SKIPPED_DIRS = new Set(["node_modules", "dist", "build", "out", ".git"]);
 
