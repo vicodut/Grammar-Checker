@@ -17,7 +17,7 @@ const serviceWithSavedSample = async () => {
         profileId: "p1",
         model: "m",
         local: true,
-        ok: [[10, 50]],
+        ok: [{ letters: 10, ms: 50 }],
         failures: {},
       },
     ],

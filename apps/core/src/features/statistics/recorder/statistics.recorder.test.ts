@@ -23,7 +23,7 @@ describe("StatisticsRecorder", () => {
           profileId: "p1",
           model: "qwen3:8b",
           local: true,
-          ok: [[100, 480, 20]],
+          ok: [{ letters: 100, ms: 480, words: 20 }],
           failures: { timeout: 1 },
         },
       ],
@@ -97,7 +97,7 @@ describe("StatisticsRecorder", () => {
     recorder.record([answered(480)]);
     await recorder.flush();
     expect(landed).toBe(true);
-    expect(saved()?.entries[0]?.ok).toEqual([[100, 480, 20]]);
+    expect(saved()?.entries[0]?.ok).toEqual([{ letters: 100, ms: 480, words: 20 }]);
   });
 
   test("a failed save is logged by code, and the numbers stay in memory", async () => {

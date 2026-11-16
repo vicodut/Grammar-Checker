@@ -2,7 +2,7 @@ import { mkdir, readFile, rename, rm, writeFile } from "node:fs/promises";
 import { dirname } from "node:path";
 import { type AppError, appError } from "../../../shared/errors";
 import { err, ok, type Result } from "../../../shared/result";
-import { StatisticsFile } from "./statistics-file.schema";
+import { encodeStatisticsFile, StatisticsFile } from "./statistics-file.schema";
 
 /** The statistics file, beside the settings file. Holds numbers and codes only. */
 export class StatisticsFileRepository {
@@ -35,7 +35,10 @@ export class StatisticsFileRepository {
     try {
       await mkdir(dirname(this.path), { recursive: true });
       await rm(temp, { force: true });
-      await writeFile(temp, `${JSON.stringify(file, null, 2)}\n`, { mode: 0o600, flag: "wx" });
+      await writeFile(temp, `${JSON.stringify(encodeStatisticsFile(file), null, 2)}\n`, {
+        mode: 0o600,
+        flag: "wx",
+      });
       await rename(temp, this.path);
       return ok(undefined);
     } catch {

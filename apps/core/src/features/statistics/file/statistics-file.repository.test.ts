@@ -3,7 +3,7 @@ import { chmod, mkdtemp, readdir, rm, stat, writeFile } from "node:fs/promises";
 import { tmpdir } from "node:os";
 import { join } from "node:path";
 import { StatisticsFileRepository } from "./statistics-file.repository";
-import type { StatisticsFile } from "./statistics-file.schema";
+import { encodeStatisticsFile, type StatisticsFile } from "./statistics-file.schema";
 
 let dir = "";
 beforeEach(async () => {
@@ -20,7 +20,7 @@ const file: StatisticsFile = {
       profileId: "p1",
       model: "qwen3:8b",
       local: true,
-      ok: [[120, 480]],
+      ok: [{ letters: 120, ms: 480 }],
       failures: { timeout: 1 },
     },
   ],
@@ -62,7 +62,7 @@ describe("StatisticsFileRepository", () => {
 
   test("a saved file from before word counts (letters and ms only) still loads", async () => {
     const path = join(dir, "statistics.json");
-    await writeFile(path, JSON.stringify(file));
+    await writeFile(path, JSON.stringify(encodeStatisticsFile(file)));
     expect(await new StatisticsFileRepository(path).load()).toEqual({ ok: true, value: file });
   });
 
@@ -73,11 +73,11 @@ describe("StatisticsFileRepository", () => {
       profileId: "p1",
       model: "qwen3:8b",
       local: true,
-      ok: [[120, 480, 20]],
+      ok: [{ letters: 120, ms: 480, words: 20 }],
       failures: { timeout: 1 },
     };
     const withWords: StatisticsFile = { ...file, entries: [entry] };
-    await writeFile(path, JSON.stringify(withWords));
+    await writeFile(path, JSON.stringify(encodeStatisticsFile(withWords)));
     expect(await new StatisticsFileRepository(path).load()).toEqual({ ok: true, value: withWords });
   });
 

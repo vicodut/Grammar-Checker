@@ -33,12 +33,12 @@ const oneDecimal = (value: number): number => Math.round(value * 10) / 10;
 
 export const msPerLetter = (ok: readonly TimedSample[]): number | null => {
   if (ok.length < MIN_TIMED_SAMPLES) return null;
-  return oneDecimal(median(ok.map(([letters, ms]) => ms / letters)));
+  return oneDecimal(median(ok.map(({ letters, ms }) => ms / letters)));
 };
 
 /** Only a sample with a word count above zero has a ms per word; the others are left out. */
 const withWords = (ok: readonly TimedSample[]): [words: number, ms: number][] =>
-  ok.flatMap(([, ms, words]): [number, number][] => (words && words > 0 ? [[words, ms]] : []));
+  ok.flatMap(({ ms, words }): [number, number][] => (words && words > 0 ? [[words, ms]] : []));
 
 export const msPerWord = (ok: readonly TimedSample[]): number | null => {
   const counted = withWords(ok);
@@ -46,27 +46,29 @@ export const msPerWord = (ok: readonly TimedSample[]): number | null => {
   return oneDecimal(median(counted.map(([words, ms]) => ms / words)));
 };
 
+const sum = (values: readonly number[]): number => values.reduce((total, n) => total + n, 0);
+
+/** The sum of the values, or null when there are none. */
+const sumOrNull = (values: readonly number[]): number | null =>
+  values.length === 0 ? null : sum(values);
+
 /** Only a sample with a word count above zero counts toward words; null when none does. */
-const wordsOf = (ok: readonly TimedSample[]): number | null => {
-  const counted = withWords(ok).map(([words]) => words);
-  return counted.length === 0 ? null : counted.reduce((sum, n) => sum + n, 0);
-};
+const wordsOf = (ok: readonly TimedSample[]): number | null =>
+  sumOrNull(withWords(ok).map(([words]) => words));
 
 export const cellStats = (cell: CellData): CellStats => ({
   msPerLetter: msPerLetter(cell.ok),
   msPerWord: msPerWord(cell.ok),
   okCount: cell.ok.length,
-  failureCount: Object.values(cell.failures).reduce((sum, n) => sum + n, 0),
-  letters: cell.ok.reduce((sum, [letters]) => sum + letters, 0),
+  failureCount: sum(Object.values(cell.failures)),
+  letters: sum(cell.ok.map((sample) => sample.letters)),
   words: wordsOf(cell.ok),
 });
 
 /** A row's letters: the cells' letters (ok samples only) added across both features. */
 export const rowLetters = (cells: readonly CellStats[]): number =>
-  cells.reduce((sum, cell) => sum + cell.letters, 0);
+  sum(cells.map((cell) => cell.letters));
 
 /** A row's words: the cells' word counts added, skipping a cell with none; null if no cell has one. */
-export const rowWords = (cells: readonly CellStats[]): number | null => {
-  const counted = cells.flatMap((cell) => (cell.words === null ? [] : [cell.words]));
-  return counted.length === 0 ? null : counted.reduce((sum, n) => sum + n, 0);
-};
+export const rowWords = (cells: readonly CellStats[]): number | null =>
+  sumOrNull(cells.flatMap((cell) => (cell.words === null ? [] : [cell.words])));
