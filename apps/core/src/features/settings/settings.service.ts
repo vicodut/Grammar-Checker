@@ -6,6 +6,7 @@ import type {
   SettingsView,
 } from "@gc/protocol";
 import { type AppError, appError } from "../../shared/errors";
+import type { ProfileName } from "../../shared/profile-name.type";
 import { err, ok, type Result } from "../../shared/result";
 import {
   FEATURES,
@@ -26,7 +27,6 @@ import {
   sameOrigin,
   updateProfile,
 } from "./profiles.util";
-import { RemovalListeners, type RemovedListener } from "./removal-listeners.service";
 import type { Env } from "./settings.loader";
 import type { ModelConfig } from "./settings.schema";
 import type { SettingsFileRepository } from "./settings-file.repository";
@@ -47,7 +47,7 @@ export type ModelListener = (models: FeatureModels, changed: readonly Feature[])
  */
 export class SettingsService {
   private readonly listeners: ModelListener[] = [];
-  private readonly removed = new RemovalListeners();
+  private readonly removedListeners: ((profile: ProfileName) => void)[] = [];
 
   private constructor(
     private file: SettingsFile,
@@ -120,8 +120,8 @@ export class SettingsService {
     this.listeners.push(listener);
   }
 
-  onRemoved(listener: RemovedListener): void {
-    this.removed.add(listener);
+  onRemoved(listener: (profile: ProfileName) => void): void {
+    this.removedListeners.push(listener);
   }
 
   /** The key is stored first: a profile is never saved claiming a key the Keychain refused. */
@@ -150,7 +150,9 @@ export class SettingsService {
     const profile = this.file.profiles.find((p) => p.id === id);
     const result = await this.commit(removeProfile(this.file, id), null);
     if (!result.ok) return result;
-    if (profile) this.removed.notify({ id, name: profile.name });
+    if (profile) {
+      for (const listener of this.removedListeners) listener({ profileId: id, name: profile.name });
+    }
     if (this.keys.has(id)) await this.keys.apply(id, null);
     return ok(this.profiles());
   }

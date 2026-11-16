@@ -9,7 +9,7 @@ describe("StatisticsRecorder kept names", () => {
     const first = new StatisticsRecorder(store, quiet());
     await first.load();
     first.record([answered(480)]);
-    first.markRemoved("p1", "Local");
+    first.markRemoved({ profileId: "p1", name: "Local" });
     await first.flush();
     expect(saved()?.removed).toEqual([{ profileId: "p1", name: "Local" }]);
 
@@ -24,8 +24,8 @@ describe("StatisticsRecorder kept names", () => {
     const recorder = new StatisticsRecorder(store, quiet());
     await recorder.load();
     recorder.record([answered(480)]);
-    recorder.markRemoved("p1", "Old name");
-    recorder.markRemoved("p1", "New name");
+    recorder.markRemoved({ profileId: "p1", name: "Old name" });
+    recorder.markRemoved({ profileId: "p1", name: "New name" });
     expect(recorder.removedName("p1")).toBe("New name");
   });
 
@@ -33,7 +33,7 @@ describe("StatisticsRecorder kept names", () => {
     const { store, saved } = memoryStore();
     const recorder = new StatisticsRecorder(store, quiet());
     await recorder.load();
-    recorder.markRemoved("p9", "Unused");
+    recorder.markRemoved({ profileId: "p9", name: "Unused" });
     await recorder.flush();
     expect(recorder.removedName("p9")).toBeUndefined();
     expect(saved()).toBeNull();
@@ -44,7 +44,7 @@ describe("StatisticsRecorder kept names", () => {
     const recorder = new StatisticsRecorder(store, quiet());
     await recorder.load();
     recorder.record([answered(480)]);
-    recorder.markRemoved("p1", "Local");
+    recorder.markRemoved({ profileId: "p1", name: "Local" });
     expect(await recorder.clear()).toEqual(ok(undefined));
     expect(recorder.removedName("p1")).toBeUndefined();
     expect(saved()).toEqual({ version: 1, removed: [], entries: [] });

@@ -55,7 +55,7 @@ describe("StatisticsService through rename, delete and model change", () => {
     const recorder = new StatisticsRecorder(memoryStore(), new Logger(() => {}));
     await recorder.load();
     recorder.record([answered("check", "p1", "qwen3:8b", 50)]);
-    recorder.markRemoved("p1", "Home");
+    recorder.markRemoved({ profileId: "p1", name: "Home" });
     const service = new StatisticsService(recorder, () => undefined);
     expect(service.view().rows).toEqual([
       expect.objectContaining({
@@ -79,7 +79,7 @@ describe("StatisticsService through rename, delete and model change", () => {
     const recorder = new StatisticsRecorder(memoryStore(), new Logger(() => {}));
     await recorder.load();
     recorder.record([answered("check", "p1", "m", 50)]);
-    recorder.markRemoved("p1", "Old");
+    recorder.markRemoved({ profileId: "p1", name: "Old" });
     recorder.record([answered("check", "p3", "m", 90)]);
     const service = new StatisticsService(recorder, liveNames({ p3: "New" }));
     const { rows } = service.view();

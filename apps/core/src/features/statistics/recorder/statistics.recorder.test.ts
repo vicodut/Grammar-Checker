@@ -118,7 +118,7 @@ describe("StatisticsRecorder", () => {
     const recorder = new StatisticsRecorder(store, new Logger((l) => lines.push(l)));
     await recorder.load();
     recorder.record([answered(480)]);
-    recorder.markRemoved("p1", "Local");
+    recorder.markRemoved({ profileId: "p1", name: "Local" });
     await recorder.flush();
     const before = saved();
     store.failSaves = true;

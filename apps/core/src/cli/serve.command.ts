@@ -83,7 +83,7 @@ const statisticsFor = async (
   const file = join(dirname(settingsPath), "statistics.json");
   const recorder = new StatisticsRecorder(new StatisticsFileRepository(file), logger);
   await recorder.load();
-  settings.onRemoved(({ id, name }) => recorder.markRemoved(id, name));
+  settings.onRemoved((profile) => recorder.markRemoved(profile));
   const service = new StatisticsService(recorder, (id) => profileName(settings, id));
   return { recorder, service };
 };

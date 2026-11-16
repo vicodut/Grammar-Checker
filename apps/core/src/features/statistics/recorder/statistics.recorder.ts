@@ -1,5 +1,6 @@
 import type { AppError } from "../../../shared/errors";
 import type { Logger } from "../../../shared/logger";
+import type { ProfileName } from "../../../shared/profile-name.type";
 import { ok, type Result } from "../../../shared/result";
 import type { StatisticsEntry, StatisticsFile } from "../file/statistics-file.schema";
 import type { CallSample } from "../samples/call-sample.util";
@@ -60,7 +61,7 @@ export class StatisticsRecorder implements SampleSink {
    * A profile was deleted: keeps its last name, beside its rows. A profile with no rows keeps
    * nothing, so no name is stored for it.
    */
-  markRemoved(profileId: string, name: string): void {
+  markRemoved({ profileId, name }: ProfileName): void {
     const hasRows = [...this.byKey.values()].some((e) => e.profileId === profileId);
     if (!hasRows) return;
     this.removedNames.set(profileId, name);
