@@ -44,7 +44,7 @@ Each app has its own CLAUDE.md with its conventions. Follow it when working ther
 ## Pull requests
 Open a PR only when I ask. Every PR body includes:
 - **A Mermaid diagram** (```` ```mermaid ````) of what the change does: flow, sequence, or component relations, whichever fits best. Keep it small and focused on the change, not the whole system.
-- **Screenshots** when the PR touches anything the user sees (settings page, Chrome extension UI, Swift overlay or card). Show the change itself, one or more images, before/after when it replaces existing UI. No screenshots for non-UI PRs.
+- **Screenshots** when the PR touches anything the user sees (settings page, Chrome extension UI, Swift overlay or card). Show the change itself, one or more images, before/after when it replaces existing UI. No screenshots for non-UI PRs. For the settings page, use the `settings-screenshots` skill.
 - Never show real user text in screenshots. Use sample text.
 
 ## Never
