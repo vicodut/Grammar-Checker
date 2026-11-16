@@ -44,6 +44,9 @@ describe("msPerLetter", () => {
         { letters: 1, ms: 10 },
       ),
     ).toBe(10);
+  });
+
+  test("the middle sample decides it, even when the samples before it are ties", () => {
     // ratios 1, 1, 1, 1, 3.33 -> median 1
     expect(
       medianOf(

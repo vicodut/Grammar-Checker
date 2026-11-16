@@ -93,7 +93,7 @@ describe("StatisticsFileRepository", () => {
     await writeFile(path, "not json");
     const repository = new StatisticsFileRepository(path);
     expect(await repository.keepUnreadable()).toEqual({ ok: true, value: undefined });
-    expect(await Bun.file(path + ".bad").text()).toBe("not json");
+    expect(await Bun.file(`${path}.bad`).text()).toBe("not json");
     expect(await Bun.file(path).exists()).toBe(false);
     const missing = new StatisticsFileRepository(join(dir, "none.json"));
     expect(await missing.keepUnreadable()).toEqual({ ok: true, value: undefined });

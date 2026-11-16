@@ -3,8 +3,6 @@ import { lettersSent } from "../samples/letters-sent.util";
 import { wordsSent } from "../samples/words-sent.util";
 import { cellStats, rowLetters, rowWords } from "./statistics-aggregate.util";
 
-const samples = (pairs: [number, number][]) => pairs.map(([letters, ms]) => [letters, ms] as const);
-
 describe("cellStats", () => {
   test("words total counts only the ok samples with a word count; an old sample adds letters but no words", () => {
     const cell = cellStats({
