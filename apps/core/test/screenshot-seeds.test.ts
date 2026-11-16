@@ -2,9 +2,9 @@
 // core, and must hold sample data only.
 import { describe, expect, test } from "bun:test";
 import { join } from "node:path";
-import { DictionaryFile } from "../src/features/dictionary/dictionary-entry.schema";
-import { SettingsFile } from "../src/features/settings/settings-file.schema";
-import { StatisticsFile } from "../src/features/statistics/statistics-file.schema";
+import { DictionaryFile } from "../src/features/dictionary";
+import { SettingsFile } from "../src/features/settings";
+import { StatisticsFile } from "../src/features/statistics";
 
 const seedDir = join(import.meta.dir, "../../../docs/screenshots/seed");
 const read = async (name: string): Promise<unknown> =>

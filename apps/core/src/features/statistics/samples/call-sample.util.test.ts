@@ -1,5 +1,5 @@
 import { describe, expect, test } from "bun:test";
-import type { ModelIdentity } from "../providers";
+import type { ModelIdentity } from "../../providers";
 import { type CallSample, samplesForCall, samplesFromAttempts } from "./call-sample.util";
 
 const identity: ModelIdentity = { profileId: "p1", model: "qwen3:8b", local: true };

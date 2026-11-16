@@ -1,10 +1,10 @@
-import type { AppError } from "../../shared/errors";
-import type { Logger } from "../../shared/logger";
-import { ok, type Result } from "../../shared/result";
-import type { CallSample } from "./call-sample.util";
-import type { SampleSink } from "./statistics.port";
-import type { StatisticsEntry, StatisticsFile } from "./statistics-file.schema";
-import { statisticsKey } from "./statistics-key.util";
+import type { AppError } from "../../../shared/errors";
+import type { Logger } from "../../../shared/logger";
+import { ok, type Result } from "../../../shared/result";
+import type { StatisticsEntry, StatisticsFile } from "../file/statistics-file.schema";
+import type { CallSample } from "../samples/call-sample.util";
+import type { SampleSink } from "../statistics.port";
+import { statisticsKey } from "../statistics-key.util";
 
 type Store = {
   load(): Promise<Result<StatisticsFile | null, AppError>>;

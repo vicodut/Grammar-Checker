@@ -14,4 +14,5 @@ export {
 export type { ModelConfig, ServeSettings, Settings, TransportSettings } from "./settings.schema";
 export { type FeatureModels, SettingsService } from "./settings.service";
 export { SettingsFileRepository } from "./settings-file.repository";
+export { SettingsFile } from "./settings-file.schema";
 export { buildSettingsView, settingSources } from "./settings-view.builder";

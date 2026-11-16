@@ -1,10 +1,10 @@
 import { describe, expect, test } from "bun:test";
-import type { AppError } from "../../shared/errors";
-import { appError } from "../../shared/errors";
-import { Logger } from "../../shared/logger";
-import { err, ok, type Result } from "../../shared/result";
+import type { AppError } from "../../../shared/errors";
+import { appError } from "../../../shared/errors";
+import { Logger } from "../../../shared/logger";
+import { err, ok, type Result } from "../../../shared/result";
+import type { StatisticsFile } from "../file/statistics-file.schema";
 import { StatisticsRecorder } from "./statistics.recorder";
-import type { StatisticsFile } from "./statistics-file.schema";
 import { answered, failed, identity, memoryStore, quiet } from "./statistics-recorder.fixture";
 
 describe("StatisticsRecorder", () => {

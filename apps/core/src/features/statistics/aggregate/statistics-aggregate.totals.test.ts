@@ -1,7 +1,7 @@
 import { describe, expect, test } from "bun:test";
-import { lettersSent } from "./letters-sent.util";
+import { lettersSent } from "../samples/letters-sent.util";
+import { wordsSent } from "../samples/words-sent.util";
 import { cellStats, rowLetters, rowWords } from "./statistics-aggregate.util";
-import { wordsSent } from "./words-sent.util";
 
 const samples = (pairs: [number, number][]) => pairs.map(([letters, ms]) => [letters, ms] as const);
 

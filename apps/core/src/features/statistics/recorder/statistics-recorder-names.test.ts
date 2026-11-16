@@ -1,5 +1,5 @@
 import { describe, expect, test } from "bun:test";
-import { ok } from "../../shared/result";
+import { ok } from "../../../shared/result";
 import { StatisticsRecorder } from "./statistics.recorder";
 import { answered, memoryStore, quiet } from "./statistics-recorder.fixture";
 

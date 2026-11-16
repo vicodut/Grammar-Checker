@@ -1,8 +1,8 @@
-export { type CallSample, samplesForCall } from "./call-sample.util";
-export { lettersSent } from "./letters-sent.util";
+export { StatisticsFileRepository } from "./file/statistics-file.repository";
+export { StatisticsFile } from "./file/statistics-file.schema";
+export { StatisticsRecorder } from "./recorder/statistics.recorder";
+export { type CallSample, samplesForCall } from "./samples/call-sample.util";
+export { lettersSent } from "./samples/letters-sent.util";
+export { wordsSent } from "./samples/words-sent.util";
 export { NO_STATISTICS, type SampleSink } from "./statistics.port";
-export { StatisticsRecorder } from "./statistics.recorder";
-export { StatisticsService } from "./statistics.service";
-export { StatisticsFileRepository } from "./statistics-file.repository";
-export type { StatisticsFile } from "./statistics-file.schema";
-export { wordsSent } from "./words-sent.util";
+export { StatisticsService } from "./view/statistics.service";

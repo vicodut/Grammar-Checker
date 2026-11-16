@@ -1,9 +1,9 @@
 import type { StatisticsRow, StatisticsView } from "@gc/protocol";
-import type { AppError } from "../../shared/errors";
-import type { Result } from "../../shared/result";
-import type { StatisticsRecorder } from "./statistics.recorder";
-import { cellStats, rowLetters, rowWords } from "./statistics-aggregate.util";
-import { statisticsKey } from "./statistics-key.util";
+import type { AppError } from "../../../shared/errors";
+import type { Result } from "../../../shared/result";
+import { cellStats, rowLetters, rowWords } from "../aggregate/statistics-aggregate.util";
+import type { StatisticsRecorder } from "../recorder/statistics.recorder";
+import { statisticsKey } from "../statistics-key.util";
 
 /** The label for a row whose profile is no longer saved (a profile removed after its calls). */
 const REMOVED_PROFILE = "Removed profile";

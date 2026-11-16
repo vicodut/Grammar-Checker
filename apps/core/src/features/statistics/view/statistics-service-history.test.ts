@@ -1,7 +1,7 @@
 import { describe, expect, test } from "bun:test";
-import { Logger } from "../../shared/logger";
+import { Logger } from "../../../shared/logger";
+import { StatisticsRecorder } from "../recorder/statistics.recorder";
 import { answered, build, memoryStore, names } from "./statistics.fixture";
-import { StatisticsRecorder } from "./statistics.recorder";
 import { StatisticsService } from "./statistics.service";
 
 describe("StatisticsService.clear", () => {

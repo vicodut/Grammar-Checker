@@ -1,7 +1,7 @@
-import { Logger } from "../../shared/logger";
-import { ok } from "../../shared/result";
-import type { CallSample } from "./call-sample.util";
-import { StatisticsRecorder } from "./statistics.recorder";
+import { Logger } from "../../../shared/logger";
+import { ok } from "../../../shared/result";
+import { StatisticsRecorder } from "../recorder/statistics.recorder";
+import type { CallSample } from "../samples/call-sample.util";
 import { StatisticsService } from "./statistics.service";
 
 export const memoryStore = () => ({

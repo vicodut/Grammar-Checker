@@ -1,10 +1,10 @@
 import { describe, expect, test } from "bun:test";
-import { Logger } from "../../shared/logger";
-import { ok } from "../../shared/result";
+import { Logger } from "../../../shared/logger";
+import { ok } from "../../../shared/result";
+import type { StatisticsFile } from "../file/statistics-file.schema";
+import { StatisticsRecorder } from "../recorder/statistics.recorder";
 import { answered, build, memoryStore, names } from "./statistics.fixture";
-import { StatisticsRecorder } from "./statistics.recorder";
 import { StatisticsService } from "./statistics.service";
-import type { StatisticsFile } from "./statistics-file.schema";
 
 /** A service over a saved file with one sample from before word counts were recorded. */
 const serviceWithSavedSample = async () => {

@@ -1,4 +1,4 @@
-import type { TimedSample } from "./statistics-file.schema";
+import type { TimedSample } from "../file/statistics-file.schema";
 
 /** Fewer ok samples than this and a cell shows no median: one slow first call would decide it. */
 export const MIN_TIMED_SAMPLES = 5;

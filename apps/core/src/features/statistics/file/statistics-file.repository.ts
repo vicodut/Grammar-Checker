@@ -1,7 +1,7 @@
 import { mkdir, readFile, rename, rm, writeFile } from "node:fs/promises";
 import { dirname } from "node:path";
-import { type AppError, appError } from "../../shared/errors";
-import { err, ok, type Result } from "../../shared/result";
+import { type AppError, appError } from "../../../shared/errors";
+import { err, ok, type Result } from "../../../shared/result";
 import { StatisticsFile } from "./statistics-file.schema";
 
 /** The statistics file, beside the settings file. Holds numbers and codes only. */

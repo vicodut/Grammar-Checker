@@ -1,6 +1,6 @@
 import type { Feature } from "@gc/protocol";
-import type { ErrorCode } from "../../shared/errors";
-import type { ModelIdentity, TimedAttempt } from "../providers";
+import type { ErrorCode } from "../../../shared/errors";
+import type { ModelIdentity, TimedAttempt } from "../../providers";
 import { lettersSent } from "./letters-sent.util";
 import { wordsSent } from "./words-sent.util";
 
