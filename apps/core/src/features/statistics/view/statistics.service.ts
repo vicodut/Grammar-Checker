@@ -24,7 +24,8 @@ export class StatisticsService {
   view(): StatisticsView {
     const rows = new Map<string, StatisticsRow>();
     for (const entry of this.recorder.entries()) {
-      const key = statisticsKey(entry.profileId, entry.model);
+      // A row is one profile, model and tag: a model run both locally and in the cloud has two rows.
+      const key = statisticsKey(entry.profileId, entry.model, String(entry.local));
       const row: StatisticsRow = rows.get(key) ?? {
         profileId: entry.profileId,
         ...this.nameOf(entry.profileId),

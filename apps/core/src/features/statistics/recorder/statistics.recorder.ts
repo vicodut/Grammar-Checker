@@ -41,7 +41,10 @@ export class StatisticsRecorder implements SampleSink {
       return;
     }
     for (const entry of loaded.value?.entries ?? []) {
-      this.byKey.set(statisticsKey(entry.feature, entry.profileId, entry.model), entry);
+      this.byKey.set(
+        statisticsKey(entry.feature, entry.profileId, entry.model, String(entry.local)),
+        entry,
+      );
     }
     for (const { profileId, name } of loaded.value?.removed ?? []) {
       this.removedNames.set(profileId, name);
@@ -97,7 +100,7 @@ export class StatisticsRecorder implements SampleSink {
 
   private apply(sample: CallSample): void {
     const { feature, identity } = sample;
-    const key = statisticsKey(feature, identity.profileId, identity.model);
+    const key = statisticsKey(feature, identity.profileId, identity.model, String(identity.local));
     const entry = this.byKey.get(key) ?? {
       feature,
       profileId: identity.profileId,
@@ -106,7 +109,6 @@ export class StatisticsRecorder implements SampleSink {
       ok: [],
       failures: {},
     };
-    entry.local = identity.local;
     if (sample.kind === "ok") {
       entry.ok.push({ letters: sample.letters, ms: sample.ms, words: sample.words });
     } else {
