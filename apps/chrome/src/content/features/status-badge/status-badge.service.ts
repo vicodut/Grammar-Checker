@@ -3,7 +3,8 @@ import { createFrameScheduler } from "../../shared/frame-scheduler.util";
 import type { WatchedField } from "../../shared/issue-view";
 import { placeHost } from "../../shared/top-layer.util";
 import { BadgePanel, type BadgePanelCallbacks } from "./badge-panel.service";
-import { badgePosition, panelPlacement } from "./badge-position.util";
+import { placePanelSpot } from "./badge-panel-spot.util";
+import { badgePosition } from "./badge-position.util";
 import {
   type BadgeState,
   badgeLabel,
@@ -173,13 +174,7 @@ export class StatusBadge {
     this.badge.style.left = `${position.left}px`;
     this.badge.style.top = `${position.top}px`;
     this.elapsed.place(position.left, position.top);
-    if (!this.panel.isOpen) return;
-    const viewport = { width: innerWidth, height: innerHeight };
-    const spot = panelPlacement(position, viewport, this.panel.el.offsetHeight);
-    const style = this.panel.el.style;
-    style.right = `${spot.right}px`;
-    style.top = spot.top === undefined ? "" : `${spot.top}px`;
-    style.bottom = spot.bottom === undefined ? "" : `${spot.bottom}px`;
+    if (this.panel.isOpen) placePanelSpot(this.panel.el, position);
   }
 
   private attach(field: WatchedField): void {

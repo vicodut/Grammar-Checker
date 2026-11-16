@@ -33,20 +33,27 @@ const SaveNotice = ({ notice }: { notice: Notice }) =>
     </Alert>
   ) : null;
 
-export const OptionsForm = () => {
-  const [token, setToken] = useState("");
-  const [port, setPort] = useState("");
-  const [sites, setSites] = useState("");
-  const [notice, setNotice] = useState<Notice>(undefined);
-  const connection = useConnectionStatus();
-
+/** Fills the form from the saved settings once, on mount. */
+const useLoadedSettings = (
+  setToken: (token: string) => void,
+  setPort: (port: string) => void,
+  setSites: (sites: string) => void,
+): void =>
   useEffect(() => {
     void loadSettings().then((settings) => {
       setToken(settings.token);
       setPort(String(settings.port));
       setSites(settings.blockedSites.join("\n"));
     });
-  }, []);
+  }, [setToken, setPort, setSites]);
+
+export const OptionsForm = () => {
+  const [token, setToken] = useState("");
+  const [port, setPort] = useState("");
+  const [sites, setSites] = useState("");
+  const [notice, setNotice] = useState<Notice>(undefined);
+  const connection = useConnectionStatus();
+  useLoadedSettings(setToken, setPort, setSites);
 
   const onSubmit = async (event: FormEvent) => {
     event.preventDefault();
