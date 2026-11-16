@@ -22,12 +22,12 @@ Each app has its own CLAUDE.md with its conventions. Follow it when working ther
 - `bun run typecheck`
 - `bun run lint` (Biome)
 - `bun test`
-- `bun run check` runs all three. It must pass before you say a task is done.
+- `bun run check` runs typecheck, lint, size and test. It must pass before you say a task is done.
 - `bun run generate` writes the `@gc/ui` theme files; install, typecheck, test and builds run it for you. Colours change in `packages/ui/src/tokens/palette.ts` only.
 - `bun run package:extension`, `bun run package:core arm64|x64`: what CI builds, into `out/`.
 
 ## Code shape
-- Files ≤ ~200 lines, functions ≤ ~40 lines, one exported class per file. Over the limit: split before continuing.
+- Files ≤ ~200 lines, functions ≤ ~40 lines, one exported class per file. Over the limit: split before continuing. `bun run size` enforces the line limits.
 - Organize by feature first, then by technical role.
 - Start flat inside a feature (`dictionary.service.ts`, `dictionary.repository.ts`). Once a feature passes about 10 files, group by role or sub-feature. Create a role folder only when it would hold 3+ files.
 - A feature exposes its public API through its `index.ts`. Never import another feature's internals.
