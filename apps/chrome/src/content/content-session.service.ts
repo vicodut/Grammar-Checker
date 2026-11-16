@@ -1,6 +1,6 @@
 // One checking session for this frame: field watcher, underlines/card, badge, rephrase and core port.
 
-import { createSessionParts, type SessionState } from "./content-session.parts";
+import { createSessionParts, type SessionState } from "./content-session.factory";
 import { routeBackground, type SessionRoute } from "./content-session.router";
 import { FieldWatcher } from "./features/field-watcher";
 import type { StopSession } from "./features/site-gate";

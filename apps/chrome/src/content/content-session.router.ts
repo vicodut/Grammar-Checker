@@ -6,7 +6,7 @@ import {
   type CoreReadyMessage,
   isOffline,
 } from "../shared/port-messages";
-import type { SessionParts, SessionState } from "./content-session.parts";
+import type { SessionParts, SessionState } from "./content-session.factory";
 import type { FieldWatcher } from "./features/field-watcher";
 import type { FieldChecks } from "./field-checks.service";
 
