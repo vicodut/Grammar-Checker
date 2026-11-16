@@ -6,12 +6,36 @@ import { StatisticsRecorder } from "./statistics.recorder";
 import { StatisticsService } from "./statistics.service";
 import type { StatisticsFile } from "./statistics-file.schema";
 
+/** A service over a saved file with one sample from before word counts were recorded. */
+const serviceWithSavedSample = async () => {
+  const saved: StatisticsFile = {
+    version: 1,
+    removed: [],
+    entries: [
+      {
+        feature: "check",
+        profileId: "p1",
+        model: "m",
+        local: true,
+        ok: [[10, 50]],
+        failures: {},
+      },
+    ],
+  };
+  const recorder = new StatisticsRecorder(
+    { load: async () => ok(saved), save: async () => ok(undefined) },
+    new Logger(() => {}),
+  );
+  await recorder.load();
+  return { recorder, service: new StatisticsService(recorder, (id) => names[id]) };
+};
+
 describe("StatisticsService.view", () => {
   test("no samples is no rows", async () => {
     expect((await build([])).view()).toEqual({ rows: [] });
   });
 
-  test("one row per profile and model, with each feature's cell", async () => {
+  test("one row per profile and model", async () => {
     const service = await build([
       answered("check", "p1", "qwen3:8b", 50),
       answered("rephrase", "p1", "qwen3:8b", 90),
@@ -19,7 +43,22 @@ describe("StatisticsService.view", () => {
     ]);
     const { rows } = service.view();
     expect(rows).toHaveLength(2);
-    expect(rows[0]).toEqual({
+    expect(rows[1]).toMatchObject({
+      profileName: "Cloud",
+      local: false,
+      letters: 10,
+      words: 2,
+      check: { okCount: 1 },
+      rephrase: { okCount: 0, failureCount: 0, letters: 0 },
+    });
+  });
+
+  test("a row holds each feature's cell", async () => {
+    const service = await build([
+      answered("check", "p1", "qwen3:8b", 50),
+      answered("rephrase", "p1", "qwen3:8b", 90),
+    ]);
+    expect(service.view().rows[0]).toEqual({
       profileId: "p1",
       profileName: "Local",
       deleted: false,
@@ -43,14 +82,6 @@ describe("StatisticsService.view", () => {
         letters: 10,
         words: 2,
       },
-    });
-    expect(rows[1]).toMatchObject({
-      profileName: "Cloud",
-      local: false,
-      letters: 10,
-      words: 2,
-      check: { okCount: 1 },
-      rephrase: { okCount: 0, failureCount: 0, letters: 0 },
     });
   });
 
@@ -77,29 +108,9 @@ describe("StatisticsService.view", () => {
   });
 
   test("a saved sample from before word counts adds letters but no words or per-word median", async () => {
-    const saved: StatisticsFile = {
-      version: 1,
-      removed: [],
-      entries: [
-        {
-          feature: "check",
-          profileId: "p1",
-          model: "m",
-          local: true,
-          ok: [[10, 50]],
-          failures: {},
-        },
-      ],
-    };
-    const recorder = new StatisticsRecorder(
-      { load: async () => ok(saved), save: async () => ok(undefined) },
-      new Logger(() => {}),
-    );
-    await recorder.load();
-    const service = new StatisticsService(recorder, (id) => names[id]);
+    const { recorder, service } = await serviceWithSavedSample();
     recorder.record([50, 100, 150, 200].map((ms) => answered("check", "p1", "m", ms)));
-    const cell = service.view().rows[0]?.check;
-    expect(cell).toEqual({
+    expect(service.view().rows[0]?.check).toEqual({
       msPerLetter: 10,
       msPerWord: null,
       okCount: 5,
@@ -107,9 +118,12 @@ describe("StatisticsService.view", () => {
       letters: 50,
       words: 8,
     });
-    recorder.record([answered("check", "p1", "m", 250)]);
-    const full = service.view().rows[0]?.check;
-    expect(full).toEqual({
+  });
+
+  test("later samples add to a saved sample's words and both medians", async () => {
+    const { recorder, service } = await serviceWithSavedSample();
+    recorder.record([50, 100, 150, 200, 250].map((ms) => answered("check", "p1", "m", ms)));
+    expect(service.view().rows[0]?.check).toEqual({
       msPerLetter: 12.5,
       msPerWord: 75,
       okCount: 6,

@@ -2,6 +2,7 @@ import { describe, expect, test } from "bun:test";
 import { median, msPerLetter, msPerWord } from "./statistics-aggregate.util";
 
 const samples = (pairs: [number, number][]) => pairs.map(([letters, ms]) => [letters, ms] as const);
+const medianOf = (pairs: [number, number][]) => msPerLetter(samples(pairs));
 
 describe("median", () => {
   test("the middle value, or the mean of the two middle values", () => {
@@ -27,51 +28,43 @@ describe("msPerLetter", () => {
   test("is the median of ms per letter from five ok samples, to one decimal place", () => {
     // ratios 5, 10, 15, 20, 25 -> median 15
     expect(
-      msPerLetter(
-        samples([
-          [10, 50],
-          [10, 100],
-          [10, 150],
-          [10, 200],
-          [10, 250],
-        ]),
-      ),
+      medianOf([
+        [10, 50],
+        [10, 100],
+        [10, 150],
+        [10, 200],
+        [10, 250],
+      ]),
     ).toBe(15);
     // ratios 3.33, 10, 10, 10, 10 -> median 10
     expect(
-      msPerLetter(
-        samples([
-          [3, 10],
-          [1, 10],
-          [1, 10],
-          [1, 10],
-          [1, 10],
-        ]),
-      ),
+      medianOf([
+        [3, 10],
+        [1, 10],
+        [1, 10],
+        [1, 10],
+        [1, 10],
+      ]),
     ).toBe(10);
     // ratios 1, 1, 1, 1, 3.33 -> median 1
     expect(
-      msPerLetter(
-        samples([
-          [1, 1],
-          [1, 1],
-          [1, 1],
-          [1, 1],
-          [3, 10],
-        ]),
-      ),
+      medianOf([
+        [1, 1],
+        [1, 1],
+        [1, 1],
+        [1, 1],
+        [3, 10],
+      ]),
     ).toBe(1);
     // ratios 1, 2, 3.33, 4, 5 -> median 3.33, shown as 3.3
     expect(
-      msPerLetter(
-        samples([
-          [1, 1],
-          [1, 2],
-          [3, 10],
-          [1, 4],
-          [1, 5],
-        ]),
-      ),
+      medianOf([
+        [1, 1],
+        [1, 2],
+        [3, 10],
+        [1, 4],
+        [1, 5],
+      ]),
     ).toBe(3.3);
   });
 });
