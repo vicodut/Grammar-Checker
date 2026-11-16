@@ -13,7 +13,7 @@ const EMPTY_CELL = cellStats({ ok: [], failures: {} });
 /**
  * The statistics as the page reads them: one row per profile and model, each feature's cell
  * computed from the stored numbers. A live profile shows its current name; a deleted one shows
- * the last name it had, kept while it has rows, and is marked deleted.
+ * the last name it had, kept from the deletion on, and is marked deleted.
  */
 export class StatisticsService {
   constructor(
