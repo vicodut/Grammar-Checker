@@ -93,4 +93,36 @@ describe("CheckService statistics", () => {
     await service.check({ text: SENTENCE });
     expect(samples).toEqual([{ kind: "failure", feature: "check", identity, code: "timeout" }]);
   });
+
+  test("a timeout followed by a successful retry is one timed ok sample, and no failure", async () => {
+    const samples: CallSample[] = [];
+    // The provider gives up on the first attempt (onRetry), then answers the retry.
+    const retried: Provider = {
+      model: "test-model",
+      identity,
+      healthcheck: async () => true,
+      complete: async (_messages, options) => {
+        options?.onRetry?.();
+        return NO_ISSUES;
+      },
+    };
+    const service = new CheckService(
+      retried,
+      new CheckCache(),
+      { load: async () => ok([]) },
+      new Logger(() => {}),
+      { record: (batch) => samples.push(...batch) },
+    );
+    await service.check({ text: SENTENCE });
+    expect(samples).toEqual([
+      {
+        kind: "ok",
+        feature: "check",
+        identity,
+        letters: SENTENCE.length,
+        words: 6,
+        ms: expect.any(Number),
+      },
+    ]);
+  });
 });
