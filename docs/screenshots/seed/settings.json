@@ -1,0 +1,21 @@
+{
+  "version": 1,
+  "activeProfileId": "sample-a",
+  "builtInProfileId": "sample-a",
+  "profiles": [
+    {
+      "id": "sample-a",
+      "name": "Sample profile A",
+      "baseUrl": "http://127.0.0.1:7396/v1",
+      "model": "sample-model-1",
+      "reasoningEffort": null
+    },
+    {
+      "id": "sample-b",
+      "name": "Sample profile B",
+      "baseUrl": "https://cloud.example.com/v1",
+      "model": "sample-model-2",
+      "reasoningEffort": null
+    }
+  ]
+}

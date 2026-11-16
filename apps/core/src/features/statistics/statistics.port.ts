@@ -1,4 +1,4 @@
-import type { CallSample } from "./call-sample.util";
+import type { CallSample } from "./samples/call-sample.util";
 
 /** Where the model calls report their samples. Recording never delays or fails a call. */
 export type SampleSink = {

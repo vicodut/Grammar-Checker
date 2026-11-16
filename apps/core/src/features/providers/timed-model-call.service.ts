@@ -54,7 +54,10 @@ export const timedModelCall = async <T>(
     };
     const reply = await input.provider.complete(messages, { signal: input.signal, onRetry });
     const result = reply.ok ? input.parse(reply.value) : reply;
-    attempts.push({ outcome: result.ok ? "ok" : result.error.code, ms: now() - attemptStart });
+    // A call the caller abandoned is not an attempt: it records nothing, whatever its reply.
+    if (!input.signal?.aborted) {
+      attempts.push({ outcome: result.ok ? "ok" : result.error.code, ms: now() - attemptStart });
+    }
     return { result, parseFailed: reply.ok && !result.ok };
   };
   const result = await completeAndParse(input, attempt);

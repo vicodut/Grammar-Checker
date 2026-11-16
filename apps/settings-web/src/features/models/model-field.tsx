@@ -26,6 +26,25 @@ const status = (models: ModelsState): string => {
   }
 };
 
+/** What the list says about itself, and the button that reloads it. */
+const ModelStatus = ({ models, onReload }: { models: ModelsState; onReload: () => void }) => (
+  <p
+    className="m-0 flex flex-wrap items-center gap-x-3 gap-y-1 text-xs text-muted-foreground"
+    aria-live="polite"
+  >
+    <span className={models.phase === "failed" ? "text-warning" : undefined}>{status(models)}</span>
+    <Button
+      variant="link"
+      size="sm"
+      className="h-auto gap-1 p-0 text-xs has-[>svg]:px-0 [&_svg]:size-3"
+      disabled={models.phase === "loading"}
+      onClick={onReload}
+    >
+      <RotateCw aria-hidden="true" /> Reload list
+    </Button>
+  </p>
+);
+
 /**
  * The model name: free text, with the endpoint's models as searchable suggestions (the
  * browser filters hundreds of them as you type). The list never blocks typing a name.
@@ -55,23 +74,7 @@ export const ModelField = ({ id, value, models, onChange, onReload }: Props) => 
             ))}
           </datalist>
         )}
-        <p
-          className="m-0 flex flex-wrap items-center gap-x-3 gap-y-1 text-xs text-muted-foreground"
-          aria-live="polite"
-        >
-          <span className={models.phase === "failed" ? "text-warning" : undefined}>
-            {status(models)}
-          </span>
-          <Button
-            variant="link"
-            size="sm"
-            className="h-auto gap-1 p-0 text-xs has-[>svg]:px-0 [&_svg]:size-3"
-            disabled={models.phase === "loading"}
-            onClick={onReload}
-          >
-            <RotateCw aria-hidden="true" /> Reload list
-          </Button>
-        </p>
+        <ModelStatus models={models} onReload={onReload} />
       </div>
     </div>
   );

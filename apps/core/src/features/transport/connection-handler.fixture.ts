@@ -8,47 +8,54 @@ import type { ServerDeps } from "./server-deps.types";
 
 export const TOKEN = "t".repeat(43);
 
+/** What the fake session and rephraser were asked to do, and the publishers they were given. */
+interface Recording {
+  updates: CheckRequest[];
+  closedFields: string[];
+  rephraseCalls: string[];
+  disposed: number;
+  publish?: (message: CoreMessage) => void;
+  publishRephrase?: (message: CoreMessage) => void;
+}
+
+const fakeDeps = (rec: Recording, overrides: Partial<ServerDeps>): ServerDeps => ({
+  settingsView: () => {
+    throw new Error("the WebSocket handler never reads settings");
+  },
+  createSession: (publish) => {
+    rec.publish = publish;
+    return {
+      update: (request) => rec.updates.push(request),
+      close: (fieldId) => rec.closedFields.push(fieldId),
+      dispose: () => rec.disposed++,
+    };
+  },
+  addDictionaryTerm: async () => ok(undefined),
+  createRephraser: (publish) => {
+    rec.publishRephrase = publish;
+    return {
+      request: async (m) => {
+        rec.rephraseCalls.push(`request ${m.fieldId} ${m.requestId}`);
+      },
+      edited: (fieldId) => rec.rephraseCalls.push(`edited ${fieldId}`),
+      cancel: (fieldId) => rec.rephraseCalls.push(`cancel ${fieldId}`),
+      dispose: () => rec.rephraseCalls.push("dispose"),
+    };
+  },
+  ...overrides,
+});
+
 export const setup = (overrides: Partial<ServerDeps> = {}, helloTimeoutMs = 5000) => {
   const sent: CoreMessage[] = [];
   const closes: number[] = [];
-  const updates: CheckRequest[] = [];
-  const closedFields: string[] = [];
   const logs: string[] = [];
-  let disposed = 0;
-  const rephraseCalls: string[] = [];
-  let publish: ((message: CoreMessage) => void) | undefined;
-  let publishRephrase: ((message: CoreMessage) => void) | undefined;
-  const deps: ServerDeps = {
-    settingsView: () => {
-      throw new Error("the WebSocket handler never reads settings");
-    },
-    createSession: (p) => {
-      publish = p;
-      return {
-        update: (request) => updates.push(request),
-        close: (fieldId) => closedFields.push(fieldId),
-        dispose: () => disposed++,
-      };
-    },
-    addDictionaryTerm: async () => ok(undefined),
-    createRephraser: (p) => {
-      publishRephrase = p;
-      return {
-        request: async (m) => {
-          rephraseCalls.push(`request ${m.fieldId} ${m.requestId}`);
-        },
-        edited: (fieldId) => rephraseCalls.push(`edited ${fieldId}`),
-        cancel: (fieldId) => rephraseCalls.push(`cancel ${fieldId}`),
-        dispose: () => rephraseCalls.push("dispose"),
-      };
-    },
-    ...overrides,
-  };
+  const rec: Recording = { updates: [], closedFields: [], rephraseCalls: [], disposed: 0 };
   const socket = {
     send: (m: CoreMessage) => sent.push(m),
     close: (code: number) => closes.push(code),
   };
   const logger = new Logger((line) => logs.push(line));
+  const deps = fakeDeps(rec, overrides);
   const handler = new ConnectionHandler({ token: TOKEN, helloTimeoutMs }, deps, socket, logger);
   // The challenge is set aside, so `sent` holds what follows it.
   const challenge = sent.shift();
@@ -62,12 +69,12 @@ export const setup = (overrides: Partial<ServerDeps> = {}, helloTimeoutMs = 5000
     ready: { type: "ready", proof: coreProofFor(TOKEN, challenge.nonce) } as const,
     sent,
     closes,
-    updates,
-    closedFields,
+    updates: rec.updates,
+    closedFields: rec.closedFields,
     logs,
-    disposed: () => disposed,
-    publish: (m: CoreMessage) => publish?.(m),
-    rephraseCalls,
-    publishRephrase: (m: CoreMessage) => publishRephrase?.(m),
+    disposed: () => rec.disposed,
+    publish: (m: CoreMessage) => rec.publish?.(m),
+    rephraseCalls: rec.rephraseCalls,
+    publishRephrase: (m: CoreMessage) => rec.publishRephrase?.(m),
   };
 };

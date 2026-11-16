@@ -40,7 +40,7 @@ export class RephraseService {
     private readonly provider: Provider,
     private readonly logger: Logger,
     private readonly cache: RephraseCache,
-    private readonly stats: SampleSink = NO_STATISTICS,
+    private readonly statistics: SampleSink = NO_STATISTICS,
   ) {}
 
   async rephrase(input: RephraseInput, run: RephraseRun): Promise<Result<number, AppError>> {
@@ -107,7 +107,9 @@ export class RephraseService {
       logger: this.logger,
       signal,
     });
-    this.stats.record(samplesForCall(timed.attempts, "rephrase", provider.identity, sentences));
+    this.statistics.record(
+      samplesForCall(timed.attempts, "rephrase", provider.identity, sentences),
+    );
     const { result: reply, ms } = timed;
     if (!reply.ok) {
       this.logger.error({ event: "rephrase.tone_failed", ms, code: reply.error.code });

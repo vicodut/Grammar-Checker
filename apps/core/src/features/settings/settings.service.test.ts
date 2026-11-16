@@ -85,11 +85,11 @@ describe("SettingsService", () => {
   test("a removed profile tells the removal listeners its id and last name", async () => {
     const { service } = await open();
     await service.create(cloud);
-    const removed: { id: string; name: string }[] = [];
+    const removed: { profileId: string; name: string }[] = [];
     service.onRemoved((profile) => removed.push(profile));
     await service.update("p2", { ...cloud, name: "Renamed" });
     expect(await service.remove("p2")).toMatchObject({ ok: true });
-    expect(removed).toEqual([{ id: "p2", name: "Renamed" }]);
+    expect(removed).toEqual([{ profileId: "p2", name: "Renamed" }]);
   });
 
   test("a refused removal tells no one", async () => {

@@ -94,12 +94,12 @@ const Body = ({ view }: { view: StatisticsView }) =>
 
 /** The Reset button's confirmation: nothing is cleared until "Clear all" is pressed. */
 const ConfirmReset = ({
-  onYes,
-  onNo,
+  onClearAll,
+  onCancel,
   busy,
 }: {
-  onYes: () => void;
-  onNo: () => void;
+  onClearAll: () => void;
+  onCancel: () => void;
   busy: boolean;
 }) => (
   <Alert variant="warning" role="alert" className="basis-full">
@@ -109,16 +109,40 @@ const ConfirmReset = ({
         Clear every statistic, including those of removed profiles? This cannot be undone.
       </p>
       <div className="flex flex-wrap gap-2">
-        <Button variant="destructive" size="sm" disabled={busy} onClick={onYes}>
+        <Button variant="destructive" size="sm" disabled={busy} onClick={onClearAll}>
           Clear all statistics
         </Button>
-        <Button variant="outline" size="sm" disabled={busy} onClick={onNo}>
+        <Button variant="outline" size="sm" disabled={busy} onClick={onCancel}>
           Cancel
         </Button>
       </div>
     </AlertDescription>
   </Alert>
 );
+
+/** The Reset button, or the confirmation while a reset is under way. */
+const ResetControl = ({
+  flow,
+  loading,
+  send,
+  onConfirm,
+}: {
+  flow: ResetState;
+  loading: boolean;
+  send: (event: ResetEvent) => void;
+  onConfirm: () => void;
+}) =>
+  flow.phase !== "idle" ? (
+    <ConfirmReset
+      busy={flow.phase === "clearing"}
+      onClearAll={onConfirm}
+      onCancel={() => send({ type: "cancel" })}
+    />
+  ) : (
+    <Button variant="outline" size="sm" disabled={loading} onClick={() => send({ type: "reset" })}>
+      Reset statistics
+    </Button>
+  );
 
 /** Statistics: how fast each profile's model checks text per letter, and how often it fails. */
 export const StatisticsPanel = ({ token }: { token: string }) => {
@@ -151,22 +175,12 @@ export const StatisticsPanel = ({ token }: { token: string }) => {
         {flow.error !== null && <p className="m-0 text-destructive">{errorText(flow.error)}</p>}
       </CardContent>
       <CardFooter className="flex flex-wrap gap-2">
-        {flow.phase !== "idle" ? (
-          <ConfirmReset
-            busy={flow.phase === "clearing"}
-            onYes={() => void confirmClear()}
-            onNo={() => send({ type: "cancel" })}
-          />
-        ) : (
-          <Button
-            variant="outline"
-            size="sm"
-            disabled={result === null}
-            onClick={() => send({ type: "reset" })}
-          >
-            Reset statistics
-          </Button>
-        )}
+        <ResetControl
+          flow={flow}
+          loading={result === null}
+          send={send}
+          onConfirm={() => void confirmClear()}
+        />
       </CardFooter>
     </Card>
   );

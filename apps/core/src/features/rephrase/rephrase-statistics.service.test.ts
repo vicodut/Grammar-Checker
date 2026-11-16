@@ -1,14 +1,18 @@
 import { describe, expect, test } from "bun:test";
 import { appError } from "../../shared/errors";
-import type { ModelIdentity } from "../providers";
+import { Logger } from "../../shared/logger";
+import { ok } from "../../shared/result";
+import type { ModelIdentity, Provider } from "../providers";
 import type { CallSample } from "../statistics";
+import { RephraseService } from "./rephrase.service";
 import { caret, keepAll, reply, setup, TEXT } from "./rephrase-service.fixture";
+import { RephraseCache } from "./services/rephrase-cache.service";
 
 const identity: ModelIdentity = { profileId: "p1", model: "test-model", local: true };
 
 const recordingSetup = (replies: Parameters<typeof setup>[0]) => {
   const samples: CallSample[] = [];
-  const t = setup(replies, { identity, stats: { record: (batch) => samples.push(...batch) } });
+  const t = setup(replies, { identity, statistics: { record: (batch) => samples.push(...batch) } });
   return { ...t, samples };
 };
 
@@ -79,6 +83,34 @@ describe("RephraseService statistics", () => {
     expect(t.samples.map((s) => (s.kind === "failure" ? s.code : s.kind))).toEqual([
       "invalid_json",
       "invalid_json",
+    ]);
+  });
+
+  test("a timeout followed by a successful retry is one timed ok sample, and no failure", async () => {
+    const samples: CallSample[] = [];
+    // The provider gives up on the first attempt (onRetry), then answers the retry.
+    const retried: Provider = {
+      model: "test-model",
+      identity,
+      healthcheck: async () => true,
+      complete: async (_messages, options) => {
+        options?.onRetry?.();
+        return ok(reply(keepAll(3)));
+      },
+    };
+    const service = new RephraseService(retried, new Logger(() => {}), new RephraseCache(), {
+      record: (batch) => samples.push(...batch),
+    });
+    await service.rephrase({ text: TEXT, caret, tones: ["professional"] }, { onTone: () => {} });
+    expect(samples).toEqual([
+      {
+        kind: "ok",
+        feature: "rephrase",
+        identity,
+        letters: expect.any(Number),
+        words: expect.any(Number),
+        ms: expect.any(Number),
+      },
     ]);
   });
 });

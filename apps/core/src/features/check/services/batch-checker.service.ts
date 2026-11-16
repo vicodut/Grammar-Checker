@@ -17,7 +17,7 @@ export type BatchCheckDeps = {
   readonly provider: Provider;
   readonly cache: CheckCache;
   readonly logger: Logger;
-  readonly stats: SampleSink;
+  readonly statistics: SampleSink;
 };
 
 /**
@@ -43,7 +43,7 @@ export const checkBatch = async (
     dictionary: buildDictionaryContext(relevantEntries(entries, sent.join("\n"))),
   });
   const timed = await requestModelIssues(provider, messages, deps.logger);
-  deps.stats.record(samplesForCall(timed.attempts, "check", provider.identity, sent));
+  deps.statistics.record(samplesForCall(timed.attempts, "check", provider.identity, sent));
   if (!timed.result.ok) return timed.result;
   const modelIssues = timed.result;
 

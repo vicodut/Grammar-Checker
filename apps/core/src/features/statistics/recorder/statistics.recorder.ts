@@ -1,0 +1,153 @@
+import type { AppError } from "../../../shared/errors";
+import type { Logger } from "../../../shared/logger";
+import type { ProfileName } from "../../../shared/profile-name.type";
+import { ok, type Result } from "../../../shared/result";
+import type { StatisticsEntry, StatisticsFile } from "../file/statistics-file.schema";
+import type { CallSample } from "../samples/call-sample.util";
+import type { SampleSink } from "../statistics.port";
+import { statisticsKey } from "../statistics-key.util";
+
+type Store = {
+  load(): Promise<Result<StatisticsFile | null, AppError>>;
+  save(file: StatisticsFile): Promise<Result<void, AppError>>;
+  keepUnreadable(): Promise<Result<void, AppError>>;
+};
+
+const EMPTY_FILE: StatisticsFile = { version: 1, removed: [], entries: [] };
+
+/**
+ * Keeps the model-call statistics in memory and writes them through after each change, one
+ * write at a time. A missing or corrupt file starts empty; a failed write is logged by code and
+ * the numbers stay in memory.
+ */
+export class StatisticsRecorder implements SampleSink {
+  private readonly byKey = new Map<string, StatisticsEntry>();
+  private readonly removedNames = new Map<string, string>();
+  private writing: Promise<unknown> = Promise.resolve();
+  /** Set when the file could not be read: it is kept aside before anything is written over it. */
+  private unreadable = false;
+
+  constructor(
+    private readonly store: Store,
+    private readonly logger: Logger,
+  ) {}
+
+  /** Reads the saved numbers, if any. Call once, before the first sample. */
+  async load(): Promise<void> {
+    const loaded = await this.store.load();
+    if (!loaded.ok) {
+      this.unreadable = true;
+      this.logger.error({ event: "statistics.load_failed", code: loaded.error.code });
+      return;
+    }
+    for (const entry of loaded.value?.entries ?? []) {
+      this.byKey.set(
+        statisticsKey(entry.feature, entry.profileId, entry.model, String(entry.local)),
+        entry,
+      );
+    }
+    for (const { profileId, name } of loaded.value?.removed ?? []) {
+      this.removedNames.set(profileId, name);
+    }
+    this.logger.info({ event: "statistics.loaded", len: this.byKey.size });
+  }
+
+  record(samples: readonly CallSample[]): void {
+    if (samples.length === 0) return;
+    for (const sample of samples) this.apply(sample);
+    this.logger.info({ event: "statistics.recorded", len: samples.length });
+    void this.write();
+  }
+
+  /** Every entry, as stored; a copy, so callers can't change the statistics. */
+  entries(): StatisticsEntry[] {
+    return structuredClone([...this.byKey.values()]);
+  }
+
+  /**
+   * A profile was deleted: keeps its last name, beside its rows, and labels any call of it still
+   * in flight that is recorded after the deletion.
+   */
+  markRemoved({ profileId, name }: ProfileName): void {
+    this.removedNames.set(profileId, name);
+    void this.write();
+  }
+
+  /** The last name kept for a deleted profile, if any. */
+  removedName(profileId: string): string | undefined {
+    return this.removedNames.get(profileId);
+  }
+
+  /**
+   * Forgets every number and kept name. The empty file is saved first, and memory is cleared
+   * only once it is written: a failed write returns its code and leaves everything as it was.
+   */
+  clear(): Promise<Result<void, AppError>> {
+    return this.enqueue(async () => {
+      const saved = await this.persist(EMPTY_FILE);
+      if (!saved.ok) return saved;
+      this.byKey.clear();
+      this.removedNames.clear();
+      this.logger.info({ event: "statistics.cleared" });
+      return ok(undefined);
+    });
+  }
+
+  /** Resolves once every write queued so far has finished; `core serve` awaits it before exiting. */
+  async flush(): Promise<void> {
+    await this.writing;
+  }
+
+  private apply(sample: CallSample): void {
+    const { feature, identity } = sample;
+    const key = statisticsKey(feature, identity.profileId, identity.model, String(identity.local));
+    const entry = this.byKey.get(key) ?? {
+      feature,
+      profileId: identity.profileId,
+      model: identity.model,
+      local: identity.local,
+      ok: [],
+      failures: {},
+    };
+    if (sample.kind === "ok") {
+      entry.ok.push({ letters: sample.letters, ms: sample.ms, words: sample.words });
+    } else {
+      entry.failures[sample.code] = (entry.failures[sample.code] ?? 0) + 1;
+    }
+    this.byKey.set(key, entry);
+  }
+
+  /** Queues a write of the current numbers behind any still running. */
+  private write(): Promise<Result<void, AppError>> {
+    return this.enqueue(() => this.persist(this.snapshot()));
+  }
+
+  /** Runs a task after every write queued so far, so no older write lands after it. */
+  private enqueue<T>(task: () => Promise<T>): Promise<T> {
+    const next = this.writing.then(task);
+    this.writing = next;
+    return next;
+  }
+
+  private snapshot(): StatisticsFile {
+    const removed = [...this.removedNames].map(([profileId, name]) => ({ profileId, name }));
+    return { version: 1, removed, entries: this.entries() };
+  }
+
+  private async persist(file: StatisticsFile): Promise<Result<void, AppError>> {
+    if (this.unreadable) {
+      const kept = await this.store.keepUnreadable();
+      if (!kept.ok) {
+        this.logger.error({ event: "statistics.write_failed", code: kept.error.code });
+        return kept;
+      }
+      this.unreadable = false;
+    }
+    const saved = await this.store.save(file);
+    if (!saved.ok) {
+      this.logger.error({ event: "statistics.write_failed", code: saved.error.code });
+      return saved;
+    }
+    return ok(undefined);
+  }
+}

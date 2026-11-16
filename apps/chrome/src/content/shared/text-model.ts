@@ -33,6 +33,25 @@ const BLOCKS = new Set([
   ...["P", "PRE", "SECTION", "TABLE", "TR", "UL"],
 ]);
 
+/** The model under construction. */
+type Builder<N> = { text: string; segments: Segment<N>[]; pendingBreak: boolean };
+
+/** A block boundary only becomes a newline once more text follows it. */
+const pushText = <N>(builder: Builder<N>, value: string, node: N | null): void => {
+  const { text } = builder;
+  if (builder.pendingBreak && text !== "" && !text.endsWith("\n")) {
+    builder.segments.push({ start: text.length, end: text.length + 1, node: null });
+    builder.text += "\n";
+  }
+  builder.pendingBreak = false;
+  builder.segments.push({
+    start: builder.text.length,
+    end: builder.text.length + value.length,
+    node,
+  });
+  builder.text += value;
+};
+
 /**
  * Builds the model: text nodes in order, `<br>` as "\n", one "\n" between blocks.
  * Elements `skip` matches (never the root) are left out, as if they were an empty block or span.
@@ -41,47 +60,36 @@ export const buildTextModel = <N extends NodeLike>(
   root: N,
   skip: SkipMatcher = skipNothing,
 ): TextModel<N> => {
-  const segments: Segment<N>[] = [];
-  let text = "";
-  // A block boundary only becomes a newline once more text follows it.
-  let pendingBreak = false;
-  const push = (value: string, node: N | null) => {
-    if (pendingBreak && text !== "" && !text.endsWith("\n")) {
-      segments.push({ start: text.length, end: text.length + 1, node: null });
-      text += "\n";
-    }
-    pendingBreak = false;
-    segments.push({ start: text.length, end: text.length + value.length, node });
-    text += value;
-  };
+  const builder: Builder<N> = { text: "", segments: [], pendingBreak: false };
   /** `endsBlock`: the node is the last child of a block or of the root. */
   const walk = (node: N, isRoot: boolean, endsBlock: boolean): void => {
     if (node.nodeType === TEXT_NODE) {
-      if (node.nodeValue) push(node.nodeValue, node);
+      if (node.nodeValue) pushText(builder, node.nodeValue, node);
       return;
     }
     if (node.nodeType !== ELEMENT_NODE || SKIPPED.has(node.nodeName)) return;
     if (node.nodeName === "BR") {
       // A <br> ending a non-empty block only keeps the line open; it adds no line of its own.
+      const { text, pendingBreak } = builder;
       const emptyLine = text === "" || text.endsWith("\n") || pendingBreak;
-      if (!endsBlock || emptyLine) push("\n", null);
+      if (!endsBlock || emptyLine) pushText(builder, "\n", null);
       return;
     }
     const block = isRoot || BLOCKS.has(node.nodeName);
     if (!isRoot && skip(node)) {
       // A skipped block still separates the lines around it.
-      if (block) pendingBreak = true;
+      if (block) builder.pendingBreak = true;
       return;
     }
-    if (block && !isRoot) pendingBreak = true;
+    if (block && !isRoot) builder.pendingBreak = true;
     const children = Array.from(node.childNodes as ArrayLike<N>);
     children.forEach((child, i) => {
       walk(child, false, i === children.length - 1 && (block || endsBlock));
     });
-    if (block && !isRoot) pendingBreak = true;
+    if (block && !isRoot) builder.pendingBreak = true;
   };
   walk(root, true, true);
-  return { text, segments };
+  return { text: builder.text, segments: builder.segments };
 };
 
 /** The DOM point for a text offset; null when it falls in a synthetic newline or out of range. */

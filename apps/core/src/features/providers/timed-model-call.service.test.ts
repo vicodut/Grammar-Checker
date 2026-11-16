@@ -177,5 +177,6 @@ describe("timedModelCall", () => {
       result: err(appError("model_invalid_json")),
     });
     expect(calls).toHaveLength(1);
+    expect(timed.attempts).toEqual([]);
   });
 });

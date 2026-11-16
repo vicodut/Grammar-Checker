@@ -9,7 +9,7 @@ import {
   CardTitle,
 } from "@gc/ui";
 import { Check, CircleCheck, Copy, Eye, EyeOff, RefreshCw, TriangleAlert } from "lucide-react";
-import { useState } from "react";
+import { useTokenFlow } from "./extension-token.hook";
 
 type Props = {
   token: string;
@@ -67,33 +67,42 @@ const TokenRow = ({ token, shown, copied, onToggle, onCopy }: RowProps) => (
   </div>
 );
 
+type RotateProps = {
+  busy: boolean;
+  rotated: boolean;
+  confirming: boolean;
+  onAsk: () => void;
+  onConfirm: () => void;
+  onCancel: () => void;
+};
+
+/** The generate-token button, its confirmation, and the notice once a new token is in place. */
+const RotateSection = ({ busy, rotated, confirming, onAsk, onConfirm, onCancel }: RotateProps) => (
+  <>
+    {rotated && (
+      <Alert variant="success" role="status">
+        <CircleCheck aria-hidden="true" />
+        <AlertDescription>
+          New token generated. Paste it into the extension's options page to reconnect it.
+        </AlertDescription>
+      </Alert>
+    )}
+    {confirming ? (
+      <ConfirmRotate busy={busy} onYes={onConfirm} onNo={onCancel} />
+    ) : (
+      <Button variant="outline" className="self-start" disabled={busy} onClick={onAsk}>
+        <RefreshCw aria-hidden="true" /> Generate new token…
+      </Button>
+    )}
+  </>
+);
+
 /**
  * The install token the Chrome extension needs. The user copies it here and pastes it into the
  * extension's options page; nothing sends it to the extension. Hidden until "Show".
  */
 export const ExtensionToken = ({ token, busy, onRotate }: Props) => {
-  const [shown, setShown] = useState(false);
-  const [copied, setCopied] = useState(false);
-  const [confirming, setConfirming] = useState(false);
-  const [rotated, setRotated] = useState(false);
-
-  const copy = async () => {
-    try {
-      await navigator.clipboard.writeText(token);
-      setCopied(true);
-    } catch {
-      setShown(true); // Clipboard refused: show it so it can be selected by hand.
-    }
-  };
-
-  const rotate = async () => {
-    setConfirming(false);
-    setCopied(false);
-    const done = await onRotate();
-    setRotated(done);
-    if (done) setShown(true);
-  };
-
+  const flow = useTokenFlow(token, onRotate);
   return (
     <Card aria-labelledby="extension-token">
       <CardHeader>
@@ -107,35 +116,19 @@ export const ExtensionToken = ({ token, busy, onRotate }: Props) => {
       <CardContent className="flex flex-col gap-4">
         <TokenRow
           token={token}
-          shown={shown}
-          copied={copied}
-          onToggle={() => setShown(!shown)}
-          onCopy={() => void copy()}
+          shown={flow.shown}
+          copied={flow.copied}
+          onToggle={flow.toggleShown}
+          onCopy={() => void flow.copy()}
         />
-        {rotated && (
-          <Alert variant="success" role="status">
-            <CircleCheck aria-hidden="true" />
-            <AlertDescription>
-              New token generated. Paste it into the extension's options page to reconnect it.
-            </AlertDescription>
-          </Alert>
-        )}
-        {confirming ? (
-          <ConfirmRotate
-            busy={busy}
-            onYes={() => void rotate()}
-            onNo={() => setConfirming(false)}
-          />
-        ) : (
-          <Button
-            variant="outline"
-            className="self-start"
-            disabled={busy}
-            onClick={() => setConfirming(true)}
-          >
-            <RefreshCw aria-hidden="true" /> Generate new token…
-          </Button>
-        )}
+        <RotateSection
+          busy={busy}
+          rotated={flow.rotated}
+          confirming={flow.confirming}
+          onAsk={flow.ask}
+          onConfirm={() => void flow.rotate()}
+          onCancel={flow.cancel}
+        />
       </CardContent>
     </Card>
   );

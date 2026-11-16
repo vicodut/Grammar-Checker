@@ -19,6 +19,39 @@ type Props = {
 const sameModel = (a: string, b: string) =>
   (a.includes(":") ? a : `${a}:latest`) === (b.includes(":") ? b : `${b}:latest`);
 
+const NotInstalled = () => (
+  <p className={LINE}>
+    <StatusDot tone="off" /> Ollama isn't installed. Get it from{" "}
+    <a
+      href="https://ollama.com/download"
+      target="_blank"
+      rel="noreferrer"
+      className="text-primary underline underline-offset-4"
+    >
+      ollama.com
+    </a>
+    , or pick a cloud profile.
+  </p>
+);
+
+const NotRunning = ({
+  failed,
+  busy,
+  onStart,
+}: {
+  failed: boolean;
+  busy: boolean;
+  onStart: () => void;
+}) => (
+  <p className={LINE}>
+    <StatusDot tone="off" />
+    {failed ? "Ollama didn't start within 30 s." : "Ollama isn't running."}
+    <Button variant="outline" size="sm" disabled={busy} onClick={onStart}>
+      <Play aria-hidden="true" /> Start Ollama
+    </Button>
+  </p>
+);
+
 const Status = ({ ollama, busy, onStart }: Pick<Props, "ollama" | "busy" | "onStart">) => {
   switch (ollama.state) {
     case "running":
@@ -39,30 +72,9 @@ const Status = ({ ollama, busy, onStart }: Pick<Props, "ollama" | "busy" | "onSt
         </p>
       );
     case "not_installed":
-      return (
-        <p className={LINE}>
-          <StatusDot tone="off" /> Ollama isn't installed. Get it from{" "}
-          <a
-            href="https://ollama.com/download"
-            target="_blank"
-            rel="noreferrer"
-            className="text-primary underline underline-offset-4"
-          >
-            ollama.com
-          </a>
-          , or pick a cloud profile.
-        </p>
-      );
+      return <NotInstalled />;
     default:
-      return (
-        <p className={LINE}>
-          <StatusDot tone="off" />
-          {ollama.state === "failed" ? "Ollama didn't start within 30 s." : "Ollama isn't running."}
-          <Button variant="outline" size="sm" disabled={busy} onClick={onStart}>
-            <Play aria-hidden="true" /> Start Ollama
-          </Button>
-        </p>
-      );
+      return <NotRunning failed={ollama.state === "failed"} busy={busy} onStart={onStart} />;
   }
 };
 
