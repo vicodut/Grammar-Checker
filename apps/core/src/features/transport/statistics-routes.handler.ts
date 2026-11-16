@@ -3,7 +3,7 @@ import { type AppError, appError } from "../../shared/errors";
 import { err, ok, type Result } from "../../shared/result";
 
 /** What the statistics route needs (the StatisticsService in production). */
-export type StatisticsPort = {
+export type StatisticsViewPort = {
   view(): StatisticsView;
   clear(): Promise<Result<StatisticsView, AppError>>;
 };
@@ -17,7 +17,7 @@ type Reply = Result<StatisticsView, AppError>;
 export const routeStatistics = (
   request: Request,
   pathname: string,
-  port: StatisticsPort,
+  port: StatisticsViewPort,
 ): Promise<Reply> | null => {
   if (pathname !== "/api/statistics") return null;
   if (request.method === "GET") return Promise.resolve(ok(port.view()));

@@ -6,7 +6,7 @@ import {
   type LocalModelsPort,
   type RuntimePort,
   SettingsPageFiles,
-  type StatisticsPort,
+  type StatisticsViewPort,
   type TokenSource,
   WebSocketServer,
 } from "../features/transport";
@@ -30,7 +30,7 @@ export const createServer = (
     readonly localModels: LocalModelsPort;
     /** Folder of the built settings page (`apps/settings-web/dist`). */
     readonly settingsPageDir: string;
-    readonly statistics: StatisticsPort;
+    readonly statistics: StatisticsViewPort;
   },
   logger: Logger,
 ): WebSocketServer => {

@@ -1,6 +1,6 @@
 import type { StatisticsRow, StatisticsView } from "@gc/protocol";
 import type { AppError } from "../../../shared/errors";
-import type { Result } from "../../../shared/result";
+import { ok, type Result } from "../../../shared/result";
 import { cellStats, rowLetters, rowWords } from "../aggregate/statistics-aggregate.util";
 import type { StatisticsRecorder } from "../recorder/statistics.recorder";
 import { statisticsKey } from "../statistics-key.util";
@@ -54,6 +54,6 @@ export class StatisticsService {
   /** Forgets every number; answers the (now empty) view. */
   async clear(): Promise<Result<StatisticsView, AppError>> {
     const cleared = await this.recorder.clear();
-    return cleared.ok ? { ok: true, value: this.view() } : cleared;
+    return cleared.ok ? ok(this.view()) : cleared;
   }
 }

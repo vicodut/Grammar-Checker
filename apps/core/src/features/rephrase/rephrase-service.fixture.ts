@@ -45,7 +45,7 @@ export type Options = {
   cache?: RephraseCache;
   model?: string;
   identity?: ModelIdentity;
-  stats?: SampleSink;
+  statistics?: SampleSink;
 };
 
 export const setup = (replies: Reply[], options: Options = {}) => {
@@ -61,7 +61,7 @@ export const setup = (replies: Reply[], options: Options = {}) => {
     provider,
     logger,
     options.cache ?? new RephraseCache(),
-    options.stats ?? NO_STATISTICS,
+    options.statistics ?? NO_STATISTICS,
   );
   const tones: RephraseToneResult[] = [];
   const run = (text: string, caret: number, signal?: AbortSignal, only?: RephraseTone[]) =>

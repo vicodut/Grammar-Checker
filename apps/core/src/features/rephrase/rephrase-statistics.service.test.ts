@@ -8,7 +8,7 @@ const identity: ModelIdentity = { profileId: "p1", model: "test-model", local: t
 
 const recordingSetup = (replies: Parameters<typeof setup>[0]) => {
   const samples: CallSample[] = [];
-  const t = setup(replies, { identity, stats: { record: (batch) => samples.push(...batch) } });
+  const t = setup(replies, { identity, statistics: { record: (batch) => samples.push(...batch) } });
   return { ...t, samples };
 };
 

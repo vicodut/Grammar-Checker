@@ -9,7 +9,7 @@ import { type ProbePort, routeProbe } from "./probe-routes.handler";
 import { type ProfilesPort, routeProfiles } from "./profile-routes.handler";
 import { type RuntimePort, routeRuntime } from "./runtime-routes.handler";
 import type { SettingsPageFiles } from "./settings-page-files.repository";
-import { routeStatistics, type StatisticsPort } from "./statistics-routes.handler";
+import { routeStatistics, type StatisticsViewPort } from "./statistics-routes.handler";
 
 /** The install token, as `core serve` keeps it: rotating also ends every authenticated connection. */
 export type TokenPort = {
@@ -33,7 +33,7 @@ export type HttpDeps = {
   /** The built settings page; absent in tests that only use the API. */
   readonly settingsPage?: SettingsPageFiles | undefined;
   /** The model-call statistics; absent in tests that don't use them. */
-  readonly statistics?: StatisticsPort | undefined;
+  readonly statistics?: StatisticsViewPort | undefined;
 };
 
 const API_PREFIX = "/api/";

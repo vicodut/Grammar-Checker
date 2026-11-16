@@ -49,7 +49,7 @@ export class CheckService {
     private readonly cache: CheckCache,
     private readonly dictionary: DictionarySource,
     private readonly logger: Logger,
-    private readonly stats: SampleSink = NO_STATISTICS,
+    private readonly statistics: SampleSink = NO_STATISTICS,
   ) {}
 
   async check(input: CheckInput): Promise<Result<CheckOutput, AppError>> {
@@ -88,7 +88,7 @@ export class CheckService {
       provider: this.provider,
       cache: this.cache,
       logger: this.logger,
-      stats: this.stats,
+      statistics: this.statistics,
     };
     for (const [index, batch] of batches.entries()) {
       const startedAt = performance.now();
