@@ -109,12 +109,52 @@ const FormActions = ({ busy, dispatch, test, onTest }: ActionsProps) => (
   </CardFooter>
 );
 
+/** The profile's fields: name, URL, model, reasoning effort and key. */
+const ProfileFields = ({
+  form,
+  id,
+  dispatch,
+  onListModels,
+}: Pick<Props, "form" | "dispatch" | "onListModels"> & { id: string }) => {
+  const { draft } = form;
+  const set = (field: keyof ProfileInput) => (value: string) =>
+    dispatch({ type: "draft", field, value });
+  return (
+    <CardContent className="flex flex-col gap-4">
+      <Field label="Name" id={`${id}-name`}>
+        <Input
+          id={`${id}-name`}
+          value={draft.name}
+          onChange={(e) => set("name")(e.target.value)}
+          required
+        />
+      </Field>
+      <Field label="Base URL" id={`${id}-url`}>
+        <Input
+          id={`${id}-url`}
+          type="url"
+          value={draft.baseUrl}
+          onChange={(e) => set("baseUrl")(e.target.value)}
+          required
+        />
+      </Field>
+      <ModelField
+        id={`${id}-model`}
+        value={draft.model}
+        models={form.probe.models}
+        onChange={set("model")}
+        onReload={onListModels}
+      />
+      <EffortField id={`${id}-effort`} value={draft.reasoningEffort} dispatch={dispatch} />
+      <KeyInput form={form} id={`${id}-key`} dispatch={dispatch} />
+    </CardContent>
+  );
+};
+
 /** Add or edit one profile. The key goes to the macOS Keychain, never to the settings file. */
 export const ProfileForm = ({ form, busy, dispatch, onSave, onListModels, onTest }: Props) => {
   const { draft } = form;
   const id = useId();
-  const set = (field: keyof ProfileInput) => (value: string) =>
-    dispatch({ type: "draft", field, value });
   const submit = (event: FormEvent) => {
     event.preventDefault();
     const apiKey = keyChange(form.key);
@@ -128,34 +168,7 @@ export const ProfileForm = ({ form, busy, dispatch, onSave, onListModels, onTest
             {form.id === null ? "New profile" : "Edit profile"}
           </CardTitle>
         </CardHeader>
-        <CardContent className="flex flex-col gap-4">
-          <Field label="Name" id={`${id}-name`}>
-            <Input
-              id={`${id}-name`}
-              value={draft.name}
-              onChange={(e) => set("name")(e.target.value)}
-              required
-            />
-          </Field>
-          <Field label="Base URL" id={`${id}-url`}>
-            <Input
-              id={`${id}-url`}
-              type="url"
-              value={draft.baseUrl}
-              onChange={(e) => set("baseUrl")(e.target.value)}
-              required
-            />
-          </Field>
-          <ModelField
-            id={`${id}-model`}
-            value={draft.model}
-            models={form.probe.models}
-            onChange={set("model")}
-            onReload={onListModels}
-          />
-          <EffortField id={`${id}-effort`} value={draft.reasoningEffort} dispatch={dispatch} />
-          <KeyInput form={form} id={`${id}-key`} dispatch={dispatch} />
-        </CardContent>
+        <ProfileFields form={form} id={id} dispatch={dispatch} onListModels={onListModels} />
         <FormActions busy={busy} dispatch={dispatch} test={form.probe.test} onTest={onTest} />
       </form>
     </Card>

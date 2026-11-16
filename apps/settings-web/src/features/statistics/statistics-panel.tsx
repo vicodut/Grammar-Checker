@@ -120,6 +120,30 @@ const ConfirmReset = ({
   </Alert>
 );
 
+/** The Reset button, or the confirmation while a reset is under way. */
+const ResetControl = ({
+  flow,
+  loading,
+  send,
+  onConfirm,
+}: {
+  flow: ResetState;
+  loading: boolean;
+  send: (event: ResetEvent) => void;
+  onConfirm: () => void;
+}) =>
+  flow.phase !== "idle" ? (
+    <ConfirmReset
+      busy={flow.phase === "clearing"}
+      onYes={onConfirm}
+      onNo={() => send({ type: "cancel" })}
+    />
+  ) : (
+    <Button variant="outline" size="sm" disabled={loading} onClick={() => send({ type: "reset" })}>
+      Reset statistics
+    </Button>
+  );
+
 /** Statistics: how fast each profile's model checks text per letter, and how often it fails. */
 export const StatisticsPanel = ({ token }: { token: string }) => {
   const { result, clear } = useStatistics(token);
@@ -151,22 +175,12 @@ export const StatisticsPanel = ({ token }: { token: string }) => {
         {flow.error !== null && <p className="m-0 text-destructive">{errorText(flow.error)}</p>}
       </CardContent>
       <CardFooter className="flex flex-wrap gap-2">
-        {flow.phase !== "idle" ? (
-          <ConfirmReset
-            busy={flow.phase === "clearing"}
-            onYes={() => void confirmClear()}
-            onNo={() => send({ type: "cancel" })}
-          />
-        ) : (
-          <Button
-            variant="outline"
-            size="sm"
-            disabled={result === null}
-            onClick={() => send({ type: "reset" })}
-          >
-            Reset statistics
-          </Button>
-        )}
+        <ResetControl
+          flow={flow}
+          loading={result === null}
+          send={send}
+          onConfirm={() => void confirmClear()}
+        />
       </CardFooter>
     </Card>
   );
