@@ -40,4 +40,16 @@ describe("statistics file samples", () => {
   test("a sample with no letters is not a valid sample", () => {
     expect(StatisticsFile.safeParse(fileWith([[0, 340]])).success).toBe(false);
   });
+
+  test("a model id of any length loads, so a long env model id can't make the file unreadable", () => {
+    const model = "m".repeat(300);
+    const file = {
+      version: 1,
+      removed: [],
+      entries: [
+        { feature: "check", profileId: "p1", model, local: false, ok: [[12, 340]], failures: {} },
+      ],
+    };
+    expect(StatisticsFile.parse(file).entries[0]?.model).toBe(model);
+  });
 });

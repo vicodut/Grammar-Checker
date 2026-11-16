@@ -23,7 +23,11 @@ const serviceWithSavedSample = async () => {
     ],
   };
   const recorder = new StatisticsRecorder(
-    { load: async () => ok(saved), save: async () => ok(undefined) },
+    {
+      load: async () => ok(saved),
+      save: async () => ok(undefined),
+      keepUnreadable: async () => ok(undefined),
+    },
     new Logger(() => {}),
   );
   await recorder.load();

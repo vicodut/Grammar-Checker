@@ -6,8 +6,12 @@ import type { StatisticsFile } from "../file/statistics-file.schema";
 import type { CallSample } from "../samples/call-sample.util";
 
 /** An in-memory stand-in for the statistics file: what was last saved, and whether saves fail. */
-export const memoryStore = (initial: Result<StatisticsFile | null, AppError> = ok(null)) => {
+export const memoryStore = (
+  initial: Result<StatisticsFile | null, AppError> = ok(null),
+  options: { failKeepAside?: boolean } = {},
+) => {
   let saved: StatisticsFile | null = null;
+  let keptAside = false;
   const store = {
     failSaves: false,
     load: async () => (saved ? ok(structuredClone(saved)) : initial),
@@ -16,8 +20,13 @@ export const memoryStore = (initial: Result<StatisticsFile | null, AppError> = o
       saved = structuredClone(file);
       return ok(undefined);
     },
+    keepUnreadable: async (): Promise<Result<void, AppError>> => {
+      if (options.failKeepAside) return err(appError("statistics_write_failed"));
+      keptAside = true;
+      return ok(undefined);
+    },
   };
-  return { store, saved: () => saved };
+  return { store, saved: () => saved, keptAside: () => keptAside };
 };
 
 export const identity = { profileId: "p1", model: "qwen3:8b", local: true };

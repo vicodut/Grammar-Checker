@@ -25,6 +25,17 @@ export class StatisticsFileRepository {
     }
   }
 
+  /** Moves an unreadable file aside, to a .bad copy beside it, so the next write cannot overwrite its rows. */
+  async keepUnreadable(): Promise<Result<void, AppError>> {
+    try {
+      await rename(this.path, `${this.path}.bad`);
+      return ok(undefined);
+    } catch (error) {
+      const missing = (error as NodeJS.ErrnoException).code === "ENOENT";
+      return missing ? ok(undefined) : err(appError("statistics_write_failed"));
+    }
+  }
+
   /**
    * Writes a temp file then renames it over the old one, so a crash never leaves half a file. The
    * mode is set on a fresh temp file: a leftover one is removed first, since a mode is only applied

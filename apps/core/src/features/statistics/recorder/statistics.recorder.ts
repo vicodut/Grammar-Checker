@@ -10,6 +10,7 @@ import { statisticsKey } from "../statistics-key.util";
 type Store = {
   load(): Promise<Result<StatisticsFile | null, AppError>>;
   save(file: StatisticsFile): Promise<Result<void, AppError>>;
+  keepUnreadable(): Promise<Result<void, AppError>>;
 };
 
 const EMPTY_FILE: StatisticsFile = { version: 1, removed: [], entries: [] };
@@ -23,6 +24,8 @@ export class StatisticsRecorder implements SampleSink {
   private readonly byKey = new Map<string, StatisticsEntry>();
   private readonly removedNames = new Map<string, string>();
   private writing: Promise<unknown> = Promise.resolve();
+  /** Set when the file could not be read: it is kept aside before anything is written over it. */
+  private unreadable = false;
 
   constructor(
     private readonly store: Store,
@@ -33,6 +36,7 @@ export class StatisticsRecorder implements SampleSink {
   async load(): Promise<void> {
     const loaded = await this.store.load();
     if (!loaded.ok) {
+      this.unreadable = true;
       this.logger.error({ event: "statistics.load_failed", code: loaded.error.code });
       return;
     }
@@ -131,6 +135,14 @@ export class StatisticsRecorder implements SampleSink {
   }
 
   private async persist(file: StatisticsFile): Promise<Result<void, AppError>> {
+    if (this.unreadable) {
+      const kept = await this.store.keepUnreadable();
+      if (!kept.ok) {
+        this.logger.error({ event: "statistics.write_failed", code: kept.error.code });
+        return kept;
+      }
+      this.unreadable = false;
+    }
     const saved = await this.store.save(file);
     if (!saved.ok) {
       this.logger.error({ event: "statistics.write_failed", code: saved.error.code });

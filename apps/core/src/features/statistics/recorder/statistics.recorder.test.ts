@@ -86,6 +86,7 @@ describe("StatisticsRecorder", () => {
     let landed = false;
     const slow = {
       load: store.load,
+      keepUnreadable: store.keepUnreadable,
       save: async (file: StatisticsFile): Promise<Result<void, AppError>> => {
         await new Promise((resolve) => setTimeout(resolve, 30));
         landed = true;

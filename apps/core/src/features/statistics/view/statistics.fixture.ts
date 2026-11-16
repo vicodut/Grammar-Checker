@@ -7,6 +7,7 @@ import { StatisticsService } from "./statistics.service";
 export const memoryStore = () => ({
   load: async () => ok(null),
   save: async () => ok(undefined),
+  keepUnreadable: async () => ok(undefined),
 });
 
 export const names: Record<string, string> = { p1: "Local", p2: "Cloud" };
