@@ -5,7 +5,7 @@ const base = { GC_BASE_URL: "http://127.0.0.1:11434/v1/", GC_MODEL: "qwen3:8b" }
 
 describe("loadSettings", () => {
   test("loads required vars, trims the trailing slash and defaults the dictionary path", () => {
-    const result = loadSettings(base, "/Users/me");
+    const result = loadSettings(base, "/Users/me", "darwin");
     expect(result).toEqual({
       ok: true,
       value: {
@@ -62,9 +62,26 @@ describe("loadSettings", () => {
   });
 });
 
+describe("platform folders", () => {
+  test("uses the macOS app support folder on darwin", () => {
+    const result = loadSettings(base, "/Users/me", "darwin");
+    expect(result.ok && result.value.dictionaryPath).toBe(
+      "/Users/me/Library/Application Support/GrammarChecker/dictionary.json",
+    );
+  });
+
+  test("uses ~/.local/share/GrammarChecker on Linux", () => {
+    const result = loadSettings(base, "/home/me", "linux");
+    expect(result.ok && result.value.dictionaryPath).toBe(
+      "/home/me/.local/share/GrammarChecker/dictionary.json",
+    );
+    expect(result.ok && result.value.tokenPath).toBe("/home/me/.local/share/GrammarChecker/token");
+  });
+});
+
 describe("loadTransportSettings", () => {
   test("needs no model settings and defaults port and token path", () => {
-    expect(loadTransportSettings({}, "/Users/me")).toEqual({
+    expect(loadTransportSettings({}, "/Users/me", "darwin")).toEqual({
       ok: true,
       value: {
         port: 7341,
