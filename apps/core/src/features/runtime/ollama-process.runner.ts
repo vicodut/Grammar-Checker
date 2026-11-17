@@ -15,6 +15,7 @@ export type OllamaLauncher = {
 const CANDIDATES = [
   join(homedir(), ".local", "bin", "ollama"),
   "/usr/local/bin/ollama",
+  "/usr/bin/ollama",
   "/opt/homebrew/bin/ollama",
   "/Applications/Ollama.app/Contents/Resources/ollama",
 ];
