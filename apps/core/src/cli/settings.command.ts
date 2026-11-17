@@ -3,11 +3,12 @@ import { loadTransportSettings } from "../features/settings";
 import { InstallTokenRepository } from "../features/transport";
 import type { Logger } from "../shared/logger";
 import { EXIT_FAILURE, EXIT_USAGE, type ExitCode } from "./exit-code";
+import { browserOpenCommand } from "./open-browser.util";
 import { settingsUrl } from "./settings-url.util";
 
 /**
- * `core settings`: opens the settings page of a running core in the default browser (macOS
- * `open`). If the browser can't be opened, prints the link instead.
+ * `core settings`: opens the settings page of a running core in the default browser (`open` on
+ * macOS, `xdg-open` on Linux). If the browser can't be opened, prints the link instead.
  */
 export const runSettings = async (logger: Logger): Promise<ExitCode> => {
   const settings = loadTransportSettings(process.env, homedir());
@@ -21,7 +22,17 @@ export const runSettings = async (logger: Logger): Promise<ExitCode> => {
     return EXIT_FAILURE;
   }
   const url = settingsUrl(settings.value.port, token.value);
-  const opened = await Bun.spawn(["open", url], { stdout: "ignore", stderr: "ignore" }).exited;
-  if (opened !== 0) process.stdout.write(`${url}\n`);
+  if (!(await openInBrowser(url))) process.stdout.write(`${url}\n`);
   return 0;
+};
+
+/** True when a browser opened. A missing opener (e.g. no xdg-open) counts as not opened. */
+const openInBrowser = async (url: string): Promise<boolean> => {
+  const command = browserOpenCommand(process.platform, url);
+  if (!command) return false;
+  try {
+    return (await Bun.spawn(command, { stdout: "ignore", stderr: "ignore" }).exited) === 0;
+  } catch {
+    return false;
+  }
 };
